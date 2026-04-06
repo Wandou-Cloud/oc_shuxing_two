@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>OC属性法宝 · 八字命理 & 百花谱</title>
+    <!-- TailwindCSS + 字体 + 图标库 -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://unpkg.com/framer-motion@10.16.4/dist/framer-motion.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;600;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body class="min-h-screen antialiased overflow-x-hidden relative">
+    <div id="app" class="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 py-6">
+        
+        <!-- ========= 首页主菜单（两个入口卡片） ========= -->
+        <div id="main-menu" class="flex flex-col md:flex-row justify-center items-center gap-8 min-h-[70vh]">
+            <!-- 八字命理测试卡片 -->
+            <div id="menu-bazi" class="menu-card w-80 h-96 rounded-2xl shadow-2xl cursor-pointer transition-all duration-300 flex flex-col items-center justify-center text-center bg-[#fef7e8] border border-amber-200 hover:scale-105 hover:shadow-red-900/20">
+                <div class="w-24 h-24 rounded-full bg-red-900/10 flex items-center justify-center mb-6">
+                    <i class="fas fa-yin-yang text-5xl text-red-800"></i>
+                </div>
+                <h2 class="text-3xl font-bold text-stone-800 tracking-widest mb-3">八字命理</h2>
+                <p class="text-stone-500 px-6">推演OC生辰八字，洞悉性格命局</p>
+                <div class="mt-6 text-xs text-stone-400">10题 · 天机推演</div>
+            </div>
+            <!-- 百花谱卡片 -->
+            <div id="menu-flower" class="menu-card w-80 h-96 rounded-2xl shadow-2xl cursor-pointer transition-all duration-300 flex flex-col items-center justify-center text-center bg-white border border-green-200 hover:scale-105 hover:shadow-green-700/20">
+                <div class="w-24 h-24 rounded-full bg-green-100 flex items-center justify-center mb-6">
+                    <i class="fas fa-seedling text-5xl text-green-700"></i>
+                </div>
+                <h2 class="text-3xl font-bold text-green-800 tracking-widest mb-3">百花谱</h2>
+                <p class="text-stone-500 px-6">124种灵花 · 花期花语检索</p>
+                <div class="mt-6 text-xs text-stone-400">含花语测试（敬请期待）</div>
+            </div>
+        </div>
+
+        <!-- ========= 八字命理模块（黄白黑风格） ========= -->
+        <div id="bazi-module" class="hidden">
+            <!-- 返回首页按钮 -->
+            <div class="mb-4">
+                <button id="bazi-back-home" class="text-stone-500 hover:text-red-800 transition flex items-center gap-2 text-sm"><i class="fas fa-arrow-left"></i> 返回首页</button>
+            </div>
+            <!-- 原有八字测试内容容器 -->
+            <div class="max-w-3xl mx-auto">
+                <!-- 欢迎屏幕 -->
+                <div id="welcome-screen" class="text-center space-y-12 py-20">
+                    <div class="space-y-4">
+                        <h1 class="text-5xl md:text-6xl font-black tracking-widest text-ink-dark drop-shadow-sm title-text">赋命于形</h1>
+                        <p class="text-xl text-ink-light tracking-[0.2em]">OC生辰八字推演录</p>
+                    </div>
+                    <div class="max-w-md mx-auto text-center space-y-6 text-ink-light leading-relaxed">
+                        <p>通过回答关于性格、经历与抉择的十个问题，我们将为您心仪的原创角色（OC）推演出最契合的生辰八字。</p>
+                        <div class="w-12 h-[1px] bg-red-800 mx-auto opacity-50"></div>
+                        <p class="text-sm">包含天干地支、五行喜忌及命运格局解析。</p>
+                    </div>
+                    <button id="start-btn" class="mt-8 px-12 py-4 bg-red-900 text-[#f5f0e6] rounded-sm hover:bg-red-800 transition-all duration-300 tracking-widest text-lg shadow-lg shadow-red-900/20 border border-red-700/50 hover:scale-[1.02]">开启推演</button>
+                </div>
+                <!-- 问卷屏幕 -->
+                <div id="quiz-screen" class="hidden w-full bg-[#faf7f2]/80 backdrop-blur-md p-8 md:p-12 rounded-lg shadow-2xl border border-[#e8dfce]">
+                    <div class="flex justify-between items-center mb-12">
+                        <span id="question-counter" class="text-red-900 font-bold text-xl tracking-widest font-mono">01/10</span>
+                        <div class="flex-1 mx-6 h-[2px] bg-[#e8dfce] relative">
+                            <div id="progress-bar" class="absolute top-0 left-0 h-full bg-red-900 transition-all duration-500 ease-out w-[10%]"></div>
+                        </div>
+                    </div>
+                    <div class="min-h-[300px] flex flex-col justify-center">
+                        <h2 id="question-text" class="text-2xl md:text-3xl font-bold mb-10 leading-snug text-ink-dark"></h2>
+                        <div id="options-container" class="space-y-4"></div>
+                    </div>
+                </div>
+                <!-- 加载屏幕 -->
+                <div id="loading-screen" class="hidden text-center py-32 space-y-8">
+                    <div class="relative w-32 h-32 mx-auto">
+                        <div class="absolute inset-0 border-4 border-[#e8dfce] rounded-full"></div>
+                        <div class="absolute inset-0 border-4 border-red-900 rounded-full border-t-transparent animate-spin"></div>
+                        <div class="absolute inset-0 flex items-center justify-center text-red-900">
+                            <i data-lucide="compass" class="w-10 h-10 animate-pulse"></i>
+                        </div>
+                    </div>
+                    <p class="text-xl tracking-widest animate-pulse text-ink-light">推演天机中...</p>
+                </div>
+                <!-- 结果屏幕 -->
+                <div id="result-screen" class="hidden space-y-12 pb-20">
+                    <div class="text-center space-y-4">
+                        <h2 class="text-4xl font-black tracking-widest text-ink-dark">命局推演结果</h2>
+                        <p class="text-ink-light tracking-widest">基于您的选择，推演出以下三种最可能的八字组合</p>
+                        <button id="restart-btn" class="text-sm text-red-900 hover:text-red-700 underline underline-offset-4 tracking-widest mt-4">重新推演</button>
+                    </div>
+                    <div id="results-container" class="space-y-12"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ========= 百花谱模块（绿白配色） ========= -->
+        <div id="flower-module" class="hidden">
+            <!-- 返回首页按钮 -->
+            <div class="mb-4 flex justify-between items-center">
+                <button id="flower-back-home" class="text-stone-500 hover:text-green-700 transition flex items-center gap-2 text-sm"><i class="fas fa-arrow-left"></i> 返回首页</button>
+            </div>
+            <!-- 子模块选项卡 -->
+            <div class="flex justify-center gap-6 mb-10">
+                <button id="flower-sub-baipu" class="flower-sub-tab px-8 py-2 rounded-full text-lg font-semibold transition-all bg-green-700 text-white shadow-md">百花谱检索</button>
+                <button id="flower-sub-quiz" class="flower-sub-tab px-8 py-2 rounded-full text-lg font-semibold transition-all bg-white text-green-700 border border-green-300 hover:bg-green-50">花语测试</button>
+            </div>
+
+            <!-- 百花谱检索内容 -->
+            <div id="baipu-content">
+                <!-- 搜索栏 -->
+                <div class="bg-white/80 rounded-2xl p-5 mb-8 shadow-sm border border-green-100">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                        <div>
+                            <label class="block text-sm font-medium text-green-800 mb-1"><i class="far fa-calendar-alt mr-1"></i> 花期检索 (季节/月份)</label>
+                            <div class="flex gap-2">
+                                <input type="text" id="periodSearchInput" placeholder="例如：春天 或 3-5 或 5,6,7" class="search-input flex-1 text-sm" autocomplete="off">
+                                <button id="searchPeriodBtn" class="search-btn text-white px-4 py-2 rounded-full text-sm shadow"><i class="fas fa-search mr-1"></i> 检索</button>
+                            </div>
+                            <p class="text-xs text-stone-400 mt-1">支持季节（春/夏/秋/冬）、月份数字（如3,5-9）</p>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-green-800 mb-1"><i class="fas fa-comment-dots mr-1"></i> 花语关键词检索</label>
+                            <div class="flex gap-2">
+                                <input type="text" id="meaningSearchInput" placeholder="例如：高洁 坚韧 爱情" class="search-input flex-1 text-sm" autocomplete="off">
+                                <button id="searchMeaningBtn" class="search-btn text-white px-4 py-2 rounded-full text-sm shadow"><i class="fas fa-tag mr-1"></i> 检索</button>
+                            </div>
+                            <p class="text-xs text-stone-400 mt-1">任意汉字匹配，匹配结果红色高亮，唯一结果直接跳转详情</p>
+                        </div>
+                    </div>
+                    <div class="flex justify-end mt-4 gap-3">
+                        <button id="resetSearchBtn" class="reset-btn px-5 py-1.5 rounded-full text-sm font-medium shadow-sm"><i class="fas fa-undo-alt mr-1"></i> 显示全部百花</button>
+                    </div>
+                </div>
+                <!-- 统计与导出 -->
+                <div class="flex justify-between items-center mb-5 flex-wrap gap-3">
+                    <div class="flex items-center gap-2 bg-green-50/80 px-4 py-1.5 rounded-full text-green-800 text-sm">
+                        <i class="fas fa-seedling"></i>
+                        <span>灵花总数：<span id="totalCount">124</span> 种</span>
+                    </div>
+                    <button id="exportExcelBtn" class="bg-green-700 hover:bg-green-800 text-white px-5 py-2 rounded-full shadow flex items-center gap-2 text-sm transition">
+                        <i class="fas fa-download"></i> 导出百花谱 (.xlsx)
+                    </button>
+                </div>
+                <!-- 花名网格 -->
+                <div id="flowerGrid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6"></div>
+            </div>
+            <!-- 百花谱详情视图 -->
+            <div id="detailView" class="hidden">
+                <div class="mb-6">
+                    <button id="backHomeBtn" class="back-btn bg-stone-600 hover:bg-green-700 text-white px-5 py-2 rounded-full shadow flex items-center gap-2 text-sm transition">
+                        <i class="fas fa-arrow-left"></i> 返回百花谱
+                    </button>
+                </div>
+                <div id="detailContent" class="detail-card rounded-2xl p-6 md:p-8"></div>
+            </div>
+            <!-- 花语测试占位 -->
+            <div id="quiz-placeholder" class="hidden text-center py-20 bg-white/60 rounded-2xl border border-green-200">
+                <i class="fas fa-leaf text-6xl text-green-300 mb-4"></i>
+                <h3 class="text-2xl font-bold text-green-800 mb-2">🌸 花语测试 · 敬请期待 🌸</h3>
+                <p class="text-stone-500">我们将为您的OC推演专属守护花灵，占卜命之花语。<br>功能开发中，即将上线～</p>
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="data.js"></script>
+    <script type="module" src="bazi_generator.js"></script>
+    <script type="module" src="flower.js"></script>
+    <script type="module" src="app.js"></script>
+    <script>
+        if (typeof lucide !== 'undefined') lucide.createIcons();
+    </script>
+</body>
+</html>
